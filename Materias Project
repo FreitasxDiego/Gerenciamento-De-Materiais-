@@ -1,0 +1,157 @@
+#include <stdio.h>
+#include <string.h> // Serve para manipulação de cadeias e caracteres 
+#include <locale.h> // para conseguir colocar a digitação em portugues  	
+#define MAX_MATERIAIS 100 // Define o número máximo de materiais que podem ser cadastrados no programa que no caso é 100
+
+typedef struct {
+    int id;
+    char nome[50]; // Cria um array para armazenar até 49 caracteres
+    float preco;
+    int quantidade;
+} Material;
+
+Material materiais[MAX_MATERIAIS];
+int contador = 0;  //Quantidade atual de materiais cadastrados
+
+void salvarDados() { // Função para salvar os dados no arquivo
+    FILE *arquivo = fopen("materiais.txt", "w");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para salvar os dados.\n");
+        return;
+    }
+    for (int i = 0; i < contador; i++) {
+        fprintf(arquivo, "%d|%s|%.2f|%d\n", materiais[i].id, materiais[i].nome, materiais[i].preco, materiais[i].quantidade);
+        //Escreve os dados de cada material no arquivo no formato id nome preco quantidade
+    }
+    fclose(arquivo);
+    printf("Dados salvos com sucesso.\n");
+}
+
+void carregarDados() {  // Função para carregar os dados do arquivo
+    FILE *arquivo = fopen("materiais.txt", "r");
+    if (arquivo == NULL) {
+        printf("Nenhum arquivo encontrado. Começando com lista vazia.\n");
+        return;
+    }
+    while (fscanf(arquivo, "%d|%[^|]|%f|%d\n", &materiais[contador].id, materiais[contador].nome, &materiais[contador].preco, &materiais[contador].quantidade) != EOF) {
+        contador++; //ele le os dados do arquivo linha por linha, preenchendo o array materiais e atualizando o contador
+    }
+    fclose(arquivo);
+    printf("Dados carregados com sucesso. %d materiais encontrados.\n", contador);
+}
+
+void cadastrarMaterial() {  // Função para cadastrar um material
+    if (contador >= MAX_MATERIAIS) {
+        printf("Limite de materiais atingido.\n");
+        return;
+    }
+
+    Material novoMaterial;
+    novoMaterial.id = contador + 1;
+
+    printf("Digite o nome do material: ");
+    scanf(" %[^\n]", novoMaterial.nome);
+    printf("Digite o preço do material: ");
+    scanf("%f", &novoMaterial.preco);
+    printf("Digite a quantidade do material: ");
+    scanf("%d", &novoMaterial.quantidade);
+
+    materiais[contador] = novoMaterial;
+    contador++;
+
+    printf("Material cadastrado com sucesso!\n");
+    salvarDados();  // Salva os dados após o cadastro
+}
+
+void consultarMaterial() {  // Função para consultar um material pelo ID
+    int id;
+    printf("Digite o ID do material para consulta: ");
+    scanf("%d", &id);
+
+    for (int i = 0; i < contador; i++) {
+        if (materiais[i].id == id) {
+            printf("ID: %d\n", materiais[i].id);
+            printf("Nome: %s\n", materiais[i].nome);
+            printf("Preço: %.2f\n", materiais[i].preco);
+            printf("Quantidade: %d\n", materiais[i].quantidade);
+            return;
+        }
+    }
+    printf("Material com ID %d não encontrado.\n", id);
+}
+
+void gerarRelatorio() {  // Função para gerar um relatório de todos os materiais cadastrados
+    if (contador == 0) {
+        printf("Nenhum material cadastrado.\n");
+        return;
+    }
+
+    printf("Relatório de Materiais:\n");
+    printf("ID\tNome\t\tPreço\t\tQuantidade\n");
+    for (int i = 0; i < contador; i++) {
+        printf("%d\t%s\t\t%.2f\t\t%d\n", materiais[i].id, materiais[i].nome, materiais[i].preco, materiais[i].quantidade);
+    }
+}
+
+void excluirMaterial() {  // Função para excluir um material pelo ID
+    int id;
+    printf("Digite o ID do material para excluir: ");
+    scanf("%d", &id);
+
+    for (int i = 0; i < contador; i++) {
+        if (materiais[i].id == id) {
+            for (int j = i; j < contador - 1; j++) {
+                materiais[j] = materiais[j + 1];
+            }
+            contador--;
+            printf("Material com ID %d excluído com sucesso.\n", id);
+            salvarDados(); // Salva os dados após a exclusão
+            return;
+        }
+    }
+    printf("Material com ID %d não encontrado.\n", id);
+}
+
+void exibirMenu() {  // Função para exibir o menu
+    printf("\n*-----* Sistema de Gerenciamento de Materiais de Construção *-----*\n");
+    printf("1. Cadastrar Material\n");
+    printf("2. Consultar Material\n");
+    printf("3. Gerar Relatório\n");
+    printf("4. Excluir Material\n");
+    printf("5. Sair\n");
+    printf("Escolha uma opção: ");
+}
+
+int main() {
+    setlocale(LC_ALL, "Portuguese");
+    carregarDados(); // Carrega os dados ao iniciar o programa
+
+    int opcao;
+
+    do {
+        exibirMenu(); //Barra de menu de opções 
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                cadastrarMaterial();
+                break;
+            case 2:
+                consultarMaterial();
+                break;
+            case 3:
+                gerarRelatorio();
+                break;
+            case 4:
+                excluirMaterial();
+                break;
+            case 5:
+                printf("Encerrando o programa.\n");
+                break;
+            default:
+                printf("Opção inválida. Tente novamente.\n");
+        }
+    } while (opcao != 5);
+
+    return 0;
+}
